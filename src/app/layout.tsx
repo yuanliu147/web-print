@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { AntdRegistry } from '@ant-design/nextjs-registry';
 import AntdProvider from '@/components/AntdProvider'
-import "./globals.css";
 
 export const metadata: Metadata = {
   title: "web 打印基础服务",
