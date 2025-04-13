@@ -1,0 +1,10 @@
+.boxWrap {
+  border: 2px dashed transparent;
+  display: inline-block;
+  padding: 5px;
+
+  &.active,
+  &:hover {
+    border-color: blue;
+  }
+}

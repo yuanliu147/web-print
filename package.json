@@ -13,6 +13,7 @@
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "antd": "^5.24.6",
     "next": "15.3.0",
+    "normalize.css": "^8.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -27,6 +28,7 @@
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-react-hooks": "^5.2.0",
     "prettier": "^3.5.3",
+    "sass": "^1.86.3",
     "typescript": "^5"
   }
 }
