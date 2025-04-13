@@ -21,7 +21,7 @@ export default function BoxContainer({
 		<div
 			className={`boxWrap ${id === globalData.activeElemId ? 'active' : ''}`}
 			onClick={() => {
-				setGlobalData({ ...globalData, activeElementId: id })
+				setGlobalData({ ...globalData, activeElemId: id })
 			}}
 		>
 			{children}
