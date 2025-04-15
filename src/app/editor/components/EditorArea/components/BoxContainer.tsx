@@ -24,12 +24,13 @@ export default function BoxContainer({
 			ref={containerRef}
 			className={`boxWrap ${currIsActive ? 'active' : ''}`}
 			onClick={() => {
+				const rect = containerRef.current!.getBoundingClientRect()
+
 				setGlobalData({
 					...globalData,
 					activeElement: {
 						id,
-						width: containerRef.current!.offsetWidth,
-						height: containerRef.current!.offsetHeight,
+						...rect,
 						offsetLeft: containerRef.current!.offsetLeft,
 						offsetTop: containerRef.current!.offsetTop,
 					},
