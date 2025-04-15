@@ -6,7 +6,7 @@ import EditorArea from './components/EditorArea'
 import Setting from './components/Setting'
 
 import { GlobalData, StoreContext } from './StoreContext'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import './style.scss'
 
@@ -16,13 +16,9 @@ export default function Editor() {
 	const providerValue = useMemo(() => ({ globalData, setGlobalData }), [globalData])
 
 
-	useEffect(() => {
-		console.log('全局数据改变', providerValue)
-	}, [providerValue])
-
 	return (
 		<StoreContext.Provider value={providerValue}>
-			<div className="edit-page">
+			<div className="editor-page">
 				<Header />
 				<div className="content-wrap">
 					<Material />

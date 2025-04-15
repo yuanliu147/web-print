@@ -1,4 +1,4 @@
-import './styles.scss'
+import './style.scss'
 
 export default function Setting() {
 	return (

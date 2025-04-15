@@ -2,11 +2,11 @@
 
 import BoxContainer from './components/BoxContainer'
 
-import './styles.scss'
+import './style.scss'
 
 export default function EditorArea() {
 	return (
-		<div className="editorArea">
+		<div className="editor-area">
 			编辑可视化区
 			<BoxContainer id="box1">
 				<div className="box"></div>
