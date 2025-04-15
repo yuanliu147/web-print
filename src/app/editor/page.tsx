@@ -6,9 +6,9 @@ import EditorArea from './components/EditorArea'
 import Setting from './components/Setting'
 
 import { GlobalData, StoreContext } from './StoreContext'
-
-import styles from './style.module.scss'
 import { useEffect, useMemo, useState } from 'react'
+
+import './style.scss'
 
 export default function Editor() {
 	const [globalData, setGlobalData] = useState<GlobalData>({})
@@ -22,9 +22,9 @@ export default function Editor() {
 
 	return (
 		<StoreContext.Provider value={providerValue}>
-			<div className={styles.editorPage}>
+			<div className="edit-page">
 				<Header />
-				<div className={styles.contentWrap}>
+				<div className="content-wrap">
 					<Material />
 					<EditorArea />
 					<Setting />
