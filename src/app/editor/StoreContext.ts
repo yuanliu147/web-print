@@ -3,7 +3,13 @@
 import React, { createContext } from 'react'
 
 export interface GlobalData {
-	activeElemId?: string
+	activeElement?: {
+		id: string;
+		width: number;
+		height: number;
+		offsetTop: number;
+		offsetLeft: number;
+	}
 }
 
 export interface StoreContextProps {
