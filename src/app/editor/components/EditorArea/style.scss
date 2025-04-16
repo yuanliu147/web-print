@@ -1,10 +1,9 @@
 .editor-area {
   flex: 1;
   background-color: #cdd9d9;
-  position: absolute;
+  position: relative;
   .box {
     background-color: red;
-    width: 200px;
-    height: 100px;
+    height: 100%;
   }
 }

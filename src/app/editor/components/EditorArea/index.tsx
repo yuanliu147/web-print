@@ -3,20 +3,21 @@
 import BoxContainer from './components/BoxContainer'
 import { StoreContext } from '@/app/editor/StoreContext'
 import { useContext, useRef } from 'react'
-import {
-	LEFT_DIRECTION,
-	BOTTOM_DIRECTION,
-	RIGHT_DIRECTION,
-	TOP_DIRECTION,
-	NONE_DIRECTORY,
-} from '@/app/editor/constant'
-import type { Direction } from '@/app/editor/constant'
+import type { Direction } from './constant'
+import { LEFT_DIRECTION, NONE_DIRECTORY, RESIZE_MIN_SIZE } from './constant'
+import { getDirection } from './config'
 import './style.scss'
 
 interface ResizeInfo {
 	isResizing?: boolean
 	startX?: number
 	startY?: number
+	startPosition?: {
+		offsetLeft: number
+		offsetTop: number
+		width: number
+		height: number
+	}
 	resizeDirection?: Direction
 }
 
@@ -45,29 +46,58 @@ export default function EditorArea() {
 			ref={editorAreaRef}
 			className="editor-area"
 			onMouseDownCapture={(e) => {
+				if (!globalData?.activeElement) return
+				const direction = getDirection(e, globalData.activeElement)
+				console.log('editor-area', direction, direction & NONE_DIRECTORY, globalData.activeElement, e)
+				if ((direction | NONE_DIRECTORY) === NONE_DIRECTORY) { // 鼠标没有在边框范围内
+					return;
+				}
+				const { offsetLeft, offsetTop, width, height } = globalData.activeElement
 				const { clientX, clientY } = e
+
 				resizeInfoRef.current.isResizing = true
 				resizeInfoRef.current.startX = clientX
 				resizeInfoRef.current.startY = clientY
+				resizeInfoRef.current.startPosition = { offsetLeft, offsetTop, width, height }
+				resizeInfoRef.current.resizeDirection = direction
+
+				e.stopPropagation()
 			}}
 			onMouseMove={(e) => {
 				if (!globalData.activeElement) return
 
 				if (!resizeInfoRef.current.isResizing) {
-					// 鼠标移动需要记录方向
-					const { clientX, clientY } = e
-					const { left, top, right, bottom } = globalData.activeElement
-					const DISTANCE = 5
-
-					const isLeft = Math.abs(clientX - left) <= DISTANCE ? LEFT_DIRECTION : NONE_DIRECTORY
-					const isRight = Math.abs(clientX - right) <= DISTANCE ? RIGHT_DIRECTION : NONE_DIRECTORY
-					const isBottom =
-						Math.abs(clientY - bottom) <= DISTANCE ? BOTTOM_DIRECTION : NONE_DIRECTORY
-					const isTop = Math.abs(clientY - top) <= DISTANCE ? TOP_DIRECTION : NONE_DIRECTORY
-
-					resizeInfoRef.current.resizeDirection = (isLeft & isRight & isBottom & isTop) as Direction
+					resizeInfoRef.current.resizeDirection = getDirection(e, globalData.activeElement)
 				} else {
+					const { clientX, clientY } = e
+					const { startX, startY, startPosition, resizeDirection } = resizeInfoRef.current
+
+					if ((resizeDirection | NONE_DIRECTORY) !== NONE_DIRECTORY) {
+						e.stopPropagation()
+					}
+
+					switch (resizeInfoRef.current.resizeDirection) {
+						case LEFT_DIRECTION: {
+							// 向右为正数
+							const disX = clientX - startX
+							const target = editorAreaRef.current.querySelector<HTMLDivElement>(
+								`#${globalData.activeElement.id}`,
+							)
+							const newLeft = Math.min(Math.max(startPosition!.offsetLeft + disX, 0), startPosition!.offsetLeft + startPosition!.width - RESIZE_MIN_SIZE)
+
+							target.style.left = `${newLeft}px`
+							target.style.width = `${Math.max(startPosition!.width - disX, RESIZE_MIN_SIZE)}px`
+						}
+					}
 				}
+			}}
+			onMouseUp={() => {
+				if (!resizeInfoRef.current.isResizing) return
+				resizeInfoRef.current.isResizing = false
+			}}
+			onMouseLeave={() => {
+				if (!resizeInfoRef.current.isResizing) return
+				resizeInfoRef.current.isResizing = false
 			}}
 		>
 			编辑可视化区
