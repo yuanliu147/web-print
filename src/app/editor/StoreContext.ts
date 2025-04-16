@@ -1,9 +1,13 @@
 import React, { createContext } from 'react'
 
-interface ActiveElementPosition extends DOMRect {
+interface ActiveElementPosition {
 	id: string
-	offsetTop: number // 纸张坐标
-	offsetLeft: number // 纸张坐标
+	left: number // 元素视图位置
+	top: number // 元素视图位置
+	right: number // 元素视图位置
+	bottom: number // 元素视图位置
+	offsetTop: number // 纸张位置
+	offsetLeft: number // 纸张位置
 }
 
 export interface GlobalData {

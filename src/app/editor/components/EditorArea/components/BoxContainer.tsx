@@ -3,34 +3,41 @@
 import React, { useContext, useRef } from 'react'
 import { StoreContext } from '@/app/editor/StoreContext'
 
-import './styles.scss'
+import './style.scss'
 
-interface BoxContainerProps {
+interface BoxContainerProps extends React.HTMLProps<HTMLDivElement> {
 	id: string
 }
 
 export default function BoxContainer({
 	children,
 	id = Date.now() + '',
+	...props
 }: React.PropsWithChildren<BoxContainerProps>) {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const { globalData, setGlobalData } = useContext(StoreContext)
 
 	const currIsActive = id === globalData.activeElement?.id
 
+	console.log('currIsActive', currIsActive)
+
 	return (
 		<div
 			id={id}
 			ref={containerRef}
-			className={`boxWrap ${currIsActive ? 'active' : ''}`}
+			{...props}
+			className={`box-wrap ${currIsActive ? 'active' : ''}`}
 			onClick={() => {
 				const rect = containerRef.current!.getBoundingClientRect()
-
+				console.log('rect', rect, typeof rect, { ...rect })
 				setGlobalData({
 					...globalData,
 					activeElement: {
 						id,
-						...rect,
+						left: rect.left,
+						right: rect.right,
+						top: rect.top,
+						bottom: rect.bottom,
 						offsetLeft: containerRef.current!.offsetLeft,
 						offsetTop: containerRef.current!.offsetTop,
 					},
@@ -41,14 +48,14 @@ export default function BoxContainer({
 				const { clientX: startX, clientY: startY } = e
 				const offsetLeft = containerRef.current!.offsetLeft
 				const offsetTop = containerRef.current!.offsetTop
-				let dragging = false
+				let dragging = true
 				const oldSelectStart = document.onselectstart
 
 				document.onselectstart = () => false
 				document.addEventListener('mousemove', handleMouseMove)
 				document.addEventListener('mouseup', handleMouseUp)
 				document.addEventListener('mouseleave', handleMouseLeave)
-
+				e.stopPropagation()
 				function handleMouseMove(moveE: MouseEvent) {
 					if (!dragging) return
 					const { clientX, clientY } = moveE

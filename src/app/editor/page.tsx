@@ -17,7 +17,7 @@ export default function Editor() {
 
 
 	return (
-		<StoreContext.Provider value={providerValue}>
+		<StoreContext value={providerValue}>
 			<div className="editor-page">
 				<Header />
 				<div className="content-wrap">
@@ -26,6 +26,6 @@ export default function Editor() {
 					<Setting />
 				</div>
 			</div>
-		</StoreContext.Provider>
+		</StoreContext>
 	)
 }
