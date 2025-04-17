@@ -123,30 +123,14 @@ export default function EditorArea() {
 						target.style.height = `${Math.max(startPosition!.height + disY, RESIZE_MIN_SIZE)}px`;
 					}
 
-					const mapResizeFunc = {
-						[LEFT_DIRECTION | TOP_DIRECTION]: () => {
-							onLeftResize()
-							onTopResize()
-						},
-						[LEFT_DIRECTION | BOTTOM_DIRECTION]: () => {
-							onLeftResize()
-							onBottomResize()
-						},
-						[RIGHT_DIRECTION | TOP_DIRECTION]: () => {
-							onRightResize()
-							onTopResize()
-						},
-						[RIGHT_DIRECTION | BOTTOM_DIRECTION]: () => {
-							onRightResize()
-							onBottomResize()
-						},
-						[LEFT_DIRECTION]: onLeftResize,
-						[TOP_DIRECTION]: onTopResize,
-						[RIGHT_DIRECTION]: onRightResize,
-						[BOTTOM_DIRECTION]: onBottomResize,
-					}
-
-					mapResizeFunc[resizeDirection]()
+					// 存在左方向的 resize
+					((resizeDirection & LEFT_DIRECTION) === LEFT_DIRECTION) && onLeftResize();
+					// 存在上方向的 resize
+					((resizeDirection & TOP_DIRECTION) === TOP_DIRECTION) && onTopResize();
+					// 存在右方向的 resize
+					((resizeDirection & RIGHT_DIRECTION) === RIGHT_DIRECTION) && onRightResize();
+					// 存在下方向的 resize
+					((resizeDirection & BOTTOM_DIRECTION) === BOTTOM_DIRECTION) && onBottomResize();
 				}
 			}}
 			onMouseUp={() => {
