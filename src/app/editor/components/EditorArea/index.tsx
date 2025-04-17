@@ -4,7 +4,14 @@ import BoxContainer from './components/BoxContainer'
 import { StoreContext } from '@/app/editor/StoreContext'
 import { useContext, useRef } from 'react'
 import type { Direction } from './constant'
-import { LEFT_DIRECTION, NONE_DIRECTORY, RESIZE_MIN_SIZE } from './constant'
+import {
+	BOTTOM_DIRECTION,
+	LEFT_DIRECTION,
+	NONE_DIRECTORY,
+	RESIZE_MIN_SIZE,
+	RIGHT_DIRECTION,
+	TOP_DIRECTION
+} from './constant'
 import { getDirection } from './config'
 import './style.scss'
 
@@ -76,19 +83,70 @@ export default function EditorArea() {
 						e.stopPropagation()
 					}
 
-					switch (resizeInfoRef.current.resizeDirection) {
-						case LEFT_DIRECTION: {
-							// 向右为正数
-							const disX = clientX - startX
-							const target = editorAreaRef.current.querySelector<HTMLDivElement>(
-								`#${globalData.activeElement.id}`,
-							)
-							const newLeft = Math.min(Math.max(startPosition!.offsetLeft + disX, 0), startPosition!.offsetLeft + startPosition!.width - RESIZE_MIN_SIZE)
+					const onLeftResize = () => {
+						// 向右为正数
+						const disX = clientX - startX
+						const target = editorAreaRef.current.querySelector<HTMLDivElement>(
+							`#${globalData.activeElement!.id}`,
+						)
+						// 不能小于0
+						const tempLeft = Math.max(startPosition!.offsetLeft + disX, 0)
+						// 不能大于其右边界
+						const newLeft = Math.min(tempLeft, startPosition!.offsetLeft + startPosition!.width - RESIZE_MIN_SIZE)
 
-							target.style.left = `${newLeft}px`
-							target.style.width = `${Math.max(startPosition!.width - disX, RESIZE_MIN_SIZE)}px`
-						}
+						target.style.left = `${newLeft}px`
+						target.style.width = `${Math.max(startPosition!.width - disX, RESIZE_MIN_SIZE)}px`
 					}
+					const onTopResize = () => {
+						// 向下为正数
+						const disY = clientY - startY
+						const target = editorAreaRef.current.querySelector<HTMLDivElement>(`#${globalData.activeElement!.id}`);
+
+						// 不能小于0
+						const tempTop = Math.max(startPosition!.offsetTop + disY, 0)
+						// 不能大于其下边界
+						const newTop = Math.min(tempTop, startPosition!.offsetTop + startPosition!.height - RESIZE_MIN_SIZE)
+
+						target.style.top = `${newTop}px`
+						target.style.height = `${Math.max(startPosition!.height - disY, RESIZE_MIN_SIZE)}px`
+					}
+					const onRightResize = () => {
+						const disX = clientX - startX
+						const target = editorAreaRef.current.querySelector<HTMLDivElement>(`#${globalData.activeElement!.id}`);
+
+						target.style.width = `${Math.max(startPosition!.width + disX, RESIZE_MIN_SIZE)}px`
+					}
+					const onBottomResize = () => {
+						const disY = clientY - startY
+						const target = editorAreaRef.current.querySelector<HTMLDivElement>(`#${globalData.activeElement!.id}`);
+
+						target.style.height = `${Math.max(startPosition!.height + disY, RESIZE_MIN_SIZE)}px`;
+					}
+
+					const mapResizeFunc = {
+						[LEFT_DIRECTION | TOP_DIRECTION]: () => {
+							onLeftResize()
+							onTopResize()
+						},
+						[LEFT_DIRECTION | BOTTOM_DIRECTION]: () => {
+							onLeftResize()
+							onBottomResize()
+						},
+						[RIGHT_DIRECTION | TOP_DIRECTION]: () => {
+							onRightResize()
+							onTopResize()
+						},
+						[RIGHT_DIRECTION | BOTTOM_DIRECTION]: () => {
+							onRightResize()
+							onBottomResize()
+						},
+						[LEFT_DIRECTION]: onLeftResize,
+						[TOP_DIRECTION]: onTopResize,
+						[RIGHT_DIRECTION]: onRightResize,
+						[BOTTOM_DIRECTION]: onBottomResize,
+					}
+
+					mapResizeFunc[resizeDirection]()
 				}
 			}}
 			onMouseUp={() => {
