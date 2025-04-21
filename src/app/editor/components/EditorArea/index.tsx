@@ -10,7 +10,7 @@ import {
 	NONE_DIRECTORY,
 	RESIZE_MIN_SIZE,
 	RIGHT_DIRECTION,
-	TOP_DIRECTION
+	TOP_DIRECTION,
 } from './constant'
 import { getDirection } from './config'
 import './style.scss'
@@ -45,7 +45,7 @@ const content = [
 
 export default function EditorArea() {
 	const editorAreaRef = useRef<HTMLDivElement>(null)
-	const { globalData } = useContext(StoreContext)
+	const { globalData, setGlobalData } = useContext(StoreContext)
 	const resizeInfoRef = useRef<ResizeInfo>({})
 
 	return (
@@ -55,9 +55,10 @@ export default function EditorArea() {
 			onMouseDownCapture={(e) => {
 				if (!globalData?.activeElement) return
 				const direction = getDirection(e, globalData.activeElement)
-				console.log('editor-area', direction, direction & NONE_DIRECTORY, globalData.activeElement, e)
-				if ((direction | NONE_DIRECTORY) === NONE_DIRECTORY) { // 鼠标没有在边框范围内
-					return;
+
+				if ((direction | NONE_DIRECTORY) === NONE_DIRECTORY) {
+					// 鼠标没有在边框范围内
+					return
 				}
 				const { offsetLeft, offsetTop, width, height } = globalData.activeElement
 				const { clientX, clientY } = e
@@ -74,7 +75,28 @@ export default function EditorArea() {
 				if (!globalData.activeElement) return
 
 				if (!resizeInfoRef.current.isResizing) {
-					resizeInfoRef.current.resizeDirection = getDirection(e, globalData.activeElement)
+					const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+						`#${globalData.activeElement!.id}`,
+					)!
+					const direction = getDirection(e, globalData.activeElement)
+					if ((direction | NONE_DIRECTORY) === NONE_DIRECTORY) {
+						target.style.cursor = 'move'
+						editorAreaRef.current!.style.cursor = 'default'
+						return
+					}
+
+					const cursorStyleMap = {
+						[TOP_DIRECTION]: 'n-resize',
+						[BOTTOM_DIRECTION]: 's-resize',
+						[LEFT_DIRECTION]: 'w-resize',
+						[RIGHT_DIRECTION]: 'e-resize',
+						[LEFT_DIRECTION | TOP_DIRECTION]: 'nw-resize',
+						[LEFT_DIRECTION | BOTTOM_DIRECTION]: 'sw-resize',
+						[RIGHT_DIRECTION | TOP_DIRECTION]: 'ne-resize',
+						[RIGHT_DIRECTION | BOTTOM_DIRECTION]: 'se-resize',
+					}
+					editorAreaRef.current!.style.cursor = cursorStyleMap[direction] || 'default'
+					target.style.cursor = cursorStyleMap[direction] || 'move'
 				} else {
 					const { clientX, clientY } = e
 					const { startX, startY, startPosition, resizeDirection } = resizeInfoRef.current
@@ -85,61 +107,111 @@ export default function EditorArea() {
 
 					const onLeftResize = () => {
 						// 向右为正数
-						const disX = clientX - startX
-						const target = editorAreaRef.current.querySelector<HTMLDivElement>(
+						const disX = clientX - startX!
+						const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
 							`#${globalData.activeElement!.id}`,
-						)
+						)!
 						// 不能小于0
 						const tempLeft = Math.max(startPosition!.offsetLeft + disX, 0)
 						// 不能大于其右边界
-						const newLeft = Math.min(tempLeft, startPosition!.offsetLeft + startPosition!.width - RESIZE_MIN_SIZE)
-
+						const newLeft = Math.min(
+							tempLeft,
+							startPosition!.offsetLeft + startPosition!.width - RESIZE_MIN_SIZE,
+						)
+						const newWidth = Math.max(startPosition!.width - disX, RESIZE_MIN_SIZE)
 						target.style.left = `${newLeft}px`
-						target.style.width = `${Math.max(startPosition!.width - disX, RESIZE_MIN_SIZE)}px`
+						target.style.width = `${newWidth}px`
 					}
 					const onTopResize = () => {
 						// 向下为正数
-						const disY = clientY - startY
-						const target = editorAreaRef.current.querySelector<HTMLDivElement>(`#${globalData.activeElement!.id}`);
+						const disY = clientY - startY!
+						const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+							`#${globalData.activeElement!.id}`,
+						)!
 
 						// 不能小于0
 						const tempTop = Math.max(startPosition!.offsetTop + disY, 0)
 						// 不能大于其下边界
-						const newTop = Math.min(tempTop, startPosition!.offsetTop + startPosition!.height - RESIZE_MIN_SIZE)
-
+						const newTop = Math.min(
+							tempTop,
+							startPosition!.offsetTop + startPosition!.height - RESIZE_MIN_SIZE,
+						)
+						const newHeight = Math.max(startPosition!.height - disY, RESIZE_MIN_SIZE)
 						target.style.top = `${newTop}px`
-						target.style.height = `${Math.max(startPosition!.height - disY, RESIZE_MIN_SIZE)}px`
+						target.style.height = `${newHeight}px`
 					}
 					const onRightResize = () => {
-						const disX = clientX - startX
-						const target = editorAreaRef.current.querySelector<HTMLDivElement>(`#${globalData.activeElement!.id}`);
-
-						target.style.width = `${Math.max(startPosition!.width + disX, RESIZE_MIN_SIZE)}px`
+						const disX = clientX - startX!
+						const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+							`#${globalData.activeElement!.id}`,
+						)!
+						const newWidth = Math.max(startPosition!.width + disX, RESIZE_MIN_SIZE)
+						target.style.width = `${newWidth}px`
 					}
 					const onBottomResize = () => {
-						const disY = clientY - startY
-						const target = editorAreaRef.current.querySelector<HTMLDivElement>(`#${globalData.activeElement!.id}`);
-
-						target.style.height = `${Math.max(startPosition!.height + disY, RESIZE_MIN_SIZE)}px`;
+						const disY = clientY - startY!
+						const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+							`#${globalData.activeElement!.id}`,
+						)!
+						const newHeight = Math.max(startPosition!.height + disY, RESIZE_MIN_SIZE)
+						target.style.height = `${newHeight}px`
 					}
 
 					// 存在左方向的 resize
-					((resizeDirection & LEFT_DIRECTION) === LEFT_DIRECTION) && onLeftResize();
+					;(resizeDirection & LEFT_DIRECTION) === LEFT_DIRECTION && onLeftResize()
 					// 存在上方向的 resize
-					((resizeDirection & TOP_DIRECTION) === TOP_DIRECTION) && onTopResize();
+					;(resizeDirection & TOP_DIRECTION) === TOP_DIRECTION && onTopResize()
 					// 存在右方向的 resize
-					((resizeDirection & RIGHT_DIRECTION) === RIGHT_DIRECTION) && onRightResize();
+					;(resizeDirection & RIGHT_DIRECTION) === RIGHT_DIRECTION && onRightResize()
 					// 存在下方向的 resize
-					((resizeDirection & BOTTOM_DIRECTION) === BOTTOM_DIRECTION) && onBottomResize();
+					;(resizeDirection & BOTTOM_DIRECTION) === BOTTOM_DIRECTION && onBottomResize()
 				}
 			}}
 			onMouseUp={() => {
 				if (!resizeInfoRef.current.isResizing) return
 				resizeInfoRef.current.isResizing = false
+				const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+					`#${globalData.activeElement!.id}`,
+				)!
+
+				const { left, right, top, bottom, width, height } = target.getBoundingClientRect()
+				setGlobalData({
+					...globalData,
+					activeElement: {
+						id: globalData.activeElement!.id,
+						left,
+						bottom,
+						top,
+						right,
+						width,
+						height,
+						offsetLeft: target!.offsetLeft,
+						offsetTop: target!.offsetTop,
+					},
+				})
 			}}
 			onMouseLeave={() => {
 				if (!resizeInfoRef.current.isResizing) return
 				resizeInfoRef.current.isResizing = false
+				const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+					`#${globalData.activeElement!.id}`,
+				)!
+
+				const { left, right, top, bottom, width, height } = target.getBoundingClientRect()
+				setGlobalData({
+					...globalData,
+					activeElement: {
+						id: globalData.activeElement!.id,
+						left,
+						bottom,
+						top,
+						right,
+						width,
+						height,
+						offsetLeft: target!.offsetLeft,
+						offsetTop: target!.offsetTop,
+					},
+				})
 			}}
 		>
 			编辑可视化区
