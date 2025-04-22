@@ -2,8 +2,16 @@
 	flex: 1;
 	background-color: #cdd9d9;
 	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	.box {
-		background-color: red;
 		height: 100%;
+	}
+	&__page {
+		background: #fff;
+		width: 241mm;
+		height: 140mm;
+		position: relative;
 	}
 }

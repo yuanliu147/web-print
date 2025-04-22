@@ -13,6 +13,8 @@ import {
 	TOP_DIRECTION,
 } from './constant'
 import { getDirection } from './config'
+import { Input } from 'antd'
+
 import './style.scss'
 
 interface ResizeInfo {
@@ -214,12 +216,20 @@ export default function EditorArea() {
 				})
 			}}
 		>
-			编辑可视化区
-			{content.map((box) => (
-				<BoxContainer id={box.id} style={box.style} key={box.id}>
-					<div className="box"></div>
-				</BoxContainer>
-			))}
+			<div className="editor-area__page" onClick={() => {
+				if (globalData.activeElement) {
+					setGlobalData({
+						...globalData,
+						activeElement: undefined,
+					})
+				}
+			}}>
+				{content.map((box) => (
+					<BoxContainer id={box.id} style={box.style} key={box.id}>
+						<Input className='box' variant="borderless" />
+					</BoxContainer>
+				))}
+			</div>
 		</div>
 	)
 }

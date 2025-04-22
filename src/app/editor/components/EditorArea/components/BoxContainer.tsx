@@ -27,7 +27,7 @@ export default function BoxContainer({
 			ref={containerRef}
 			{...props}
 			className={`box-wrap ${currIsActive ? 'active' : ''}`}
-			onClick={() => {
+			onClick={(e) => {
 				const { left, bottom, top, right, width, height } = containerRef.current!.getBoundingClientRect()
 				setGlobalData({
 					...globalData,
@@ -38,6 +38,7 @@ export default function BoxContainer({
 						offsetTop: containerRef.current!.offsetTop,
 					},
 				})
+				e.stopPropagation()
 			}}
 			onMouseDown={(e) => {
 				if (!currIsActive) return
