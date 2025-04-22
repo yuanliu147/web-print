@@ -3,17 +3,32 @@
   display: inline-block;
   position: absolute;
   cursor: pointer;
+  padding: 5px;
   background-color: #efefef;
   left: 0;
   top: 0;
   width: 200px;
   height: 100px;
-  &.active,
-  &:hover {
+  &.active{
     border-color: blue;
-  }
-
-  &.active {
     cursor: move;
+  }
+  &:hover:not(.active){
+    border-color: skyblue;
+  }
+  .box {
+    height: 100%;
+    width: 100%;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border: none;
+
+    &:active {
+      caret-color: skyblue;
+    }
+    &:focus {
+      outline: none;
+
+    }
   }
 }

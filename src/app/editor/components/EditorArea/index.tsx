@@ -1,6 +1,6 @@
 'use client'
 
-import BoxContainer from './components/BoxContainer'
+import Box from './components/Box'
 import { StoreContext } from '@/app/editor/StoreContext'
 import { useContext, useRef } from 'react'
 import type { Direction } from './constant'
@@ -34,14 +34,17 @@ const content = [
 	{
 		id: 'box1',
 		style: { left: '200px' },
+		type: 'input',
 	},
 	{
 		id: 'box2',
 		style: { left: '400px' },
+		type: 'input',
 	},
 	{
 		id: 'box3',
 		style: { left: '600px' },
+		type: 'input',
 	},
 ]
 
@@ -225,9 +228,7 @@ export default function EditorArea() {
 				}
 			}}>
 				{content.map((box) => (
-					<BoxContainer id={box.id} style={box.style} key={box.id}>
-						<Input className='box' variant="borderless" />
-					</BoxContainer>
+					<Box id={box.id} style={box.style} key={box.id} type={box.type}></Box>
 				))}
 			</div>
 		</div>
