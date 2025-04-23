@@ -13,7 +13,6 @@ import {
 	TOP_DIRECTION,
 } from './constant'
 import { getDirection } from './config'
-import { Input } from 'antd'
 
 import './style.scss'
 
@@ -49,17 +48,16 @@ const content = [
 ]
 
 export default function EditorArea() {
-	const editorAreaRef = useRef<HTMLDivElement>(null)
+	const pageRef = useRef<HTMLDivElement>(null)
 	const { globalData, setGlobalData } = useContext(StoreContext)
 	const resizeInfoRef = useRef<ResizeInfo>({})
 
 	return (
 		<div
-			ref={editorAreaRef}
 			className="editor-area"
 			onMouseDownCapture={(e) => {
 				if (!globalData?.activeElement) return
-				const direction = getDirection(e, globalData.activeElement)
+				const direction = getDirection(e, globalData.activeElement, pageRef.current!)
 
 				if ((direction | NONE_DIRECTORY) === NONE_DIRECTORY) {
 					// 鼠标没有在边框范围内
@@ -80,13 +78,13 @@ export default function EditorArea() {
 				if (!globalData.activeElement) return
 
 				if (!resizeInfoRef.current.isResizing) {
-					const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+					const target = pageRef.current!.querySelector<HTMLDivElement>(
 						`#${globalData.activeElement!.id}`,
 					)!
-					const direction = getDirection(e, globalData.activeElement)
+					const direction = getDirection(e, globalData.activeElement, pageRef.current!)
 					if ((direction | NONE_DIRECTORY) === NONE_DIRECTORY) {
 						target.style.cursor = 'move'
-						editorAreaRef.current!.style.cursor = 'default'
+						pageRef.current!.style.cursor = 'default'
 						return
 					}
 
@@ -100,11 +98,12 @@ export default function EditorArea() {
 						[RIGHT_DIRECTION | TOP_DIRECTION]: 'ne-resize',
 						[RIGHT_DIRECTION | BOTTOM_DIRECTION]: 'se-resize',
 					}
-					editorAreaRef.current!.style.cursor = cursorStyleMap[direction] || 'default'
+					pageRef.current!.style.cursor = cursorStyleMap[direction] || 'default'
 					target.style.cursor = cursorStyleMap[direction] || 'move'
 				} else {
 					const { clientX, clientY } = e
 					const { startX, startY, startPosition, resizeDirection } = resizeInfoRef.current
+					if (resizeDirection == null) return
 
 					if ((resizeDirection | NONE_DIRECTORY) !== NONE_DIRECTORY) {
 						e.stopPropagation()
@@ -113,7 +112,7 @@ export default function EditorArea() {
 					const onLeftResize = () => {
 						// 向右为正数
 						const disX = clientX - startX!
-						const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+						const target = pageRef.current!.querySelector<HTMLDivElement>(
 							`#${globalData.activeElement!.id}`,
 						)!
 						// 不能小于0
@@ -130,7 +129,7 @@ export default function EditorArea() {
 					const onTopResize = () => {
 						// 向下为正数
 						const disY = clientY - startY!
-						const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+						const target = pageRef.current!.querySelector<HTMLDivElement>(
 							`#${globalData.activeElement!.id}`,
 						)!
 
@@ -147,7 +146,7 @@ export default function EditorArea() {
 					}
 					const onRightResize = () => {
 						const disX = clientX - startX!
-						const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+						const target = pageRef.current!.querySelector<HTMLDivElement>(
 							`#${globalData.activeElement!.id}`,
 						)!
 						const newWidth = Math.max(startPosition!.width + disX, RESIZE_MIN_SIZE)
@@ -155,7 +154,7 @@ export default function EditorArea() {
 					}
 					const onBottomResize = () => {
 						const disY = clientY - startY!
-						const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+						const target = pageRef.current!.querySelector<HTMLDivElement>(
 							`#${globalData.activeElement!.id}`,
 						)!
 						const newHeight = Math.max(startPosition!.height + disY, RESIZE_MIN_SIZE)
@@ -163,54 +162,57 @@ export default function EditorArea() {
 					}
 
 					// 存在左方向的 resize
-					;(resizeDirection & LEFT_DIRECTION) === LEFT_DIRECTION && onLeftResize()
+					if ((resizeDirection & LEFT_DIRECTION) === LEFT_DIRECTION) {
+						onLeftResize()
+					}
+
 					// 存在上方向的 resize
-					;(resizeDirection & TOP_DIRECTION) === TOP_DIRECTION && onTopResize()
+					if ((resizeDirection & TOP_DIRECTION) === TOP_DIRECTION) {
+						onTopResize()
+					}
 					// 存在右方向的 resize
-					;(resizeDirection & RIGHT_DIRECTION) === RIGHT_DIRECTION && onRightResize()
+					if ((resizeDirection & RIGHT_DIRECTION) === RIGHT_DIRECTION) {
+						onRightResize()
+					}
 					// 存在下方向的 resize
-					;(resizeDirection & BOTTOM_DIRECTION) === BOTTOM_DIRECTION && onBottomResize()
+					if ((resizeDirection & BOTTOM_DIRECTION) === BOTTOM_DIRECTION) {
+						onBottomResize()
+					}
 				}
 			}}
-			onMouseUp={() => {
+			onMouseUp={(e) => {
 				if (!resizeInfoRef.current.isResizing) return
 				resizeInfoRef.current.isResizing = false
-				const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+				const target = pageRef.current!.querySelector<HTMLDivElement>(
 					`#${globalData.activeElement!.id}`,
 				)!
 
-				const { left, right, top, bottom, width, height } = target.getBoundingClientRect()
+				const { width, height } = target.getBoundingClientRect()
 				setGlobalData({
 					...globalData,
 					activeElement: {
 						id: globalData.activeElement!.id,
-						left,
-						bottom,
-						top,
-						right,
 						width,
 						height,
 						offsetLeft: target!.offsetLeft,
 						offsetTop: target!.offsetTop,
 					},
 				})
+
+				e.stopPropagation()
 			}}
 			onMouseLeave={() => {
 				if (!resizeInfoRef.current.isResizing) return
 				resizeInfoRef.current.isResizing = false
-				const target = editorAreaRef.current!.querySelector<HTMLDivElement>(
+				const target = pageRef.current!.querySelector<HTMLDivElement>(
 					`#${globalData.activeElement!.id}`,
 				)!
 
-				const { left, right, top, bottom, width, height } = target.getBoundingClientRect()
+				const { width, height } = target.getBoundingClientRect()
 				setGlobalData({
 					...globalData,
 					activeElement: {
 						id: globalData.activeElement!.id,
-						left,
-						bottom,
-						top,
-						right,
 						width,
 						height,
 						offsetLeft: target!.offsetLeft,
@@ -219,14 +221,18 @@ export default function EditorArea() {
 				})
 			}}
 		>
-			<div className="editor-area__page" onClick={() => {
-				if (globalData.activeElement) {
-					setGlobalData({
-						...globalData,
-						activeElement: undefined,
-					})
-				}
-			}}>
+			<div
+				ref={pageRef}
+				className="editor-area__page"
+				onClick={() => {
+					if (globalData.activeElement) {
+						setGlobalData({
+							...globalData,
+							activeElement: undefined,
+						})
+					}
+				}}
+			>
 				{content.map((box) => (
 					<Box id={box.id} style={box.style} key={box.id} type={box.type}></Box>
 				))}

@@ -11,7 +11,7 @@ interface BoxContainerProps extends React.HTMLProps<HTMLDivElement> {
 	type?: string
 }
 
-export default function Box({ id = Date.now() + '', type, ...props }: BoxContainerProps) {
+export default function Box({ id = Date.now() + '', ...props }: BoxContainerProps) {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const { globalData, setGlobalData } = useContext(StoreContext)
 	const currIsActive = id === globalData.activeElement?.id
@@ -34,16 +34,11 @@ export default function Box({ id = Date.now() + '', type, ...props }: BoxContain
 			{...props}
 			className={`box-wrap ${currIsActive ? 'active' : ''}`}
 			onClick={(e) => {
-				const { left, bottom, top, right, width, height } =
-					containerRef.current!.getBoundingClientRect()
+				const { width, height } = containerRef.current!.getBoundingClientRect()
 				setGlobalData({
 					...globalData,
 					activeElement: {
 						id,
-						left,
-						bottom,
-						top,
-						right,
 						width,
 						height,
 						offsetLeft: containerRef.current!.offsetLeft,
@@ -116,8 +111,8 @@ export default function Box({ id = Date.now() + '', type, ...props }: BoxContain
 						range.selectNodeContents(boxRef.current!) // 选中元素内容
 						range.collapse(false) // 折叠到Range末尾
 
-						selection.removeAllRanges()
-						selection.addRange(range)
+						selection?.removeAllRanges()
+						selection?.addRange(range)
 					}, 0)
 				}}
 				contentEditable={contentEditable}
