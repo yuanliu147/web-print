@@ -1,8 +1,7 @@
 'use client'
 
 import Box from './components/Box'
-import { StoreContext } from '@/app/editor/StoreContext'
-import { useContext, useRef } from 'react'
+import { useRef } from 'react'
 import type { Direction } from './constant'
 import {
 	BOTTOM_DIRECTION,
@@ -12,6 +11,7 @@ import {
 	RIGHT_DIRECTION,
 	TOP_DIRECTION,
 } from './constant'
+import { useActiveElemId, useGlobalSchema } from '@/app/editor/store'
 import { getDirection } from './config'
 
 import './style.scss'
@@ -49,21 +49,24 @@ const content = [
 
 export default function EditorArea() {
 	const pageRef = useRef<HTMLDivElement>(null)
-	const { globalData, setGlobalData } = useContext(StoreContext)
+	const { activeElemId, setActiveElemId } = useActiveElemId.getState()
+	const { updateSchemaItem, getSchemaItem } = useGlobalSchema.getState()
 	const resizeInfoRef = useRef<ResizeInfo>({})
 
 	return (
 		<div
 			className="editor-area"
 			onMouseDownCapture={(e) => {
-				if (!globalData?.activeElement) return
-				const direction = getDirection(e, globalData.activeElement, pageRef.current!)
+				if (!activeElemId) return
+				const ActiveElemInfo = getSchemaItem(activeElemId)
+
+				const direction = getDirection(e, ActiveElemInfo!, pageRef.current!)
 
 				if ((direction | NONE_DIRECTORY) === NONE_DIRECTORY) {
 					// 鼠标没有在边框范围内
 					return
 				}
-				const { offsetLeft, offsetTop, width, height } = globalData.activeElement
+				const { offsetLeft, offsetTop, width, height } = ActiveElemInfo!
 				const { clientX, clientY } = e
 
 				resizeInfoRef.current.isResizing = true
@@ -75,13 +78,12 @@ export default function EditorArea() {
 				e.stopPropagation()
 			}}
 			onMouseMove={(e) => {
-				if (!globalData.activeElement) return
+				if (!activeElemId) return
 
 				if (!resizeInfoRef.current.isResizing) {
-					const target = pageRef.current!.querySelector<HTMLDivElement>(
-						`#${globalData.activeElement!.id}`,
-					)!
-					const direction = getDirection(e, globalData.activeElement, pageRef.current!)
+					const target = pageRef.current!.querySelector<HTMLDivElement>(`#${activeElemId}`)!
+					const ActiveElemInfo = getSchemaItem(activeElemId)!
+					const direction = getDirection(e, ActiveElemInfo, pageRef.current!)
 					if ((direction | NONE_DIRECTORY) === NONE_DIRECTORY) {
 						target.style.cursor = 'move'
 						pageRef.current!.style.cursor = 'default'
@@ -112,9 +114,7 @@ export default function EditorArea() {
 					const onLeftResize = () => {
 						// 向右为正数
 						const disX = clientX - startX!
-						const target = pageRef.current!.querySelector<HTMLDivElement>(
-							`#${globalData.activeElement!.id}`,
-						)!
+						const target = pageRef.current!.querySelector<HTMLDivElement>(`#${activeElemId}`)!
 						// 不能小于0
 						const tempLeft = Math.max(startPosition!.offsetLeft + disX, 0)
 						// 不能大于其右边界
@@ -129,9 +129,7 @@ export default function EditorArea() {
 					const onTopResize = () => {
 						// 向下为正数
 						const disY = clientY - startY!
-						const target = pageRef.current!.querySelector<HTMLDivElement>(
-							`#${globalData.activeElement!.id}`,
-						)!
+						const target = pageRef.current!.querySelector<HTMLDivElement>(`#${activeElemId}`)!
 
 						// 不能小于0
 						const tempTop = Math.max(startPosition!.offsetTop + disY, 0)
@@ -146,17 +144,13 @@ export default function EditorArea() {
 					}
 					const onRightResize = () => {
 						const disX = clientX - startX!
-						const target = pageRef.current!.querySelector<HTMLDivElement>(
-							`#${globalData.activeElement!.id}`,
-						)!
+						const target = pageRef.current!.querySelector<HTMLDivElement>(`#${activeElemId}`)!
 						const newWidth = Math.max(startPosition!.width + disX, RESIZE_MIN_SIZE)
 						target.style.width = `${newWidth}px`
 					}
 					const onBottomResize = () => {
 						const disY = clientY - startY!
-						const target = pageRef.current!.querySelector<HTMLDivElement>(
-							`#${globalData.activeElement!.id}`,
-						)!
+						const target = pageRef.current!.querySelector<HTMLDivElement>(`#${activeElemId}`)!
 						const newHeight = Math.max(startPosition!.height + disY, RESIZE_MIN_SIZE)
 						target.style.height = `${newHeight}px`
 					}
@@ -183,20 +177,15 @@ export default function EditorArea() {
 			onMouseUp={(e) => {
 				if (!resizeInfoRef.current.isResizing) return
 				resizeInfoRef.current.isResizing = false
-				const target = pageRef.current!.querySelector<HTMLDivElement>(
-					`#${globalData.activeElement!.id}`,
-				)!
+				const target = pageRef.current!.querySelector<HTMLDivElement>(`#${activeElemId}`)!
 
 				const { width, height } = target.getBoundingClientRect()
-				setGlobalData({
-					...globalData,
-					activeElement: {
-						id: globalData.activeElement!.id,
-						width,
-						height,
-						offsetLeft: target!.offsetLeft,
-						offsetTop: target!.offsetTop,
-					},
+
+				updateSchemaItem(activeElemId, {
+					width,
+					height,
+					offsetLeft: target!.offsetLeft,
+					offsetTop: target!.offsetTop,
 				})
 
 				e.stopPropagation()
@@ -204,20 +193,14 @@ export default function EditorArea() {
 			onMouseLeave={() => {
 				if (!resizeInfoRef.current.isResizing) return
 				resizeInfoRef.current.isResizing = false
-				const target = pageRef.current!.querySelector<HTMLDivElement>(
-					`#${globalData.activeElement!.id}`,
-				)!
+				const target = pageRef.current!.querySelector<HTMLDivElement>(`#${activeElemId}`)!
 
 				const { width, height } = target.getBoundingClientRect()
-				setGlobalData({
-					...globalData,
-					activeElement: {
-						id: globalData.activeElement!.id,
-						width,
-						height,
-						offsetLeft: target!.offsetLeft,
-						offsetTop: target!.offsetTop,
-					},
+				updateSchemaItem(activeElemId, {
+					width,
+					height,
+					offsetLeft: target!.offsetLeft,
+					offsetTop: target!.offsetTop,
 				})
 			}}
 		>
@@ -225,11 +208,8 @@ export default function EditorArea() {
 				ref={pageRef}
 				className="editor-area__page"
 				onClick={() => {
-					if (globalData.activeElement) {
-						setGlobalData({
-							...globalData,
-							activeElement: undefined,
-						})
+					if (activeElemId) {
+						setActiveElemId(null)
 					}
 				}}
 			>

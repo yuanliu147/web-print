@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useContext, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import type { HTMLAttributes } from 'react'
-import { StoreContext } from '@/app/editor/StoreContext'
+import { useActiveElemId, useGlobalSchema } from '@/app/editor/store'
+
 
 import './style.scss'
 
@@ -13,8 +14,10 @@ interface BoxContainerProps extends React.HTMLProps<HTMLDivElement> {
 
 export default function Box({ id = Date.now() + '', ...props }: BoxContainerProps) {
 	const containerRef = useRef<HTMLDivElement>(null)
-	const { globalData, setGlobalData } = useContext(StoreContext)
-	const currIsActive = id === globalData.activeElement?.id
+	const { activeElemId, setActiveElemId } = useActiveElemId.getState()
+	const { updateSchemaItem, getSchemaItem } = useGlobalSchema.getState()
+	
+	const currIsActive = id === activeElemId
 
 	const boxRef = useRef<HTMLDivElement | null>(null)
 	const [contentEditable, setContentEditable] =
@@ -25,7 +28,7 @@ export default function Box({ id = Date.now() + '', ...props }: BoxContainerProp
 		setContentEditable('false')
 	}
 
-	console.log('currIsActive', currIsActive, globalData.activeElement?.id, id)
+	console.log('currIsActive', currIsActive, activeElemId, id)
 
 	return (
 		<div
@@ -35,20 +38,17 @@ export default function Box({ id = Date.now() + '', ...props }: BoxContainerProp
 			className={`box-wrap ${currIsActive ? 'active' : ''}`}
 			onClick={(e) => {
 				const { width, height } = containerRef.current!.getBoundingClientRect()
-				setGlobalData({
-					...globalData,
-					activeElement: {
-						id,
-						width,
-						height,
-						offsetLeft: containerRef.current!.offsetLeft,
-						offsetTop: containerRef.current!.offsetTop,
-					},
+				setActiveElemId(id)
+				updateSchemaItem(id, {
+					width,
+					height,
+					offsetLeft: containerRef.current!.offsetLeft,
+					offsetTop: containerRef.current!.offsetTop,
 				})
 				e.stopPropagation()
 			}}
 			onDoubleClick={() => {
-				console.log('onDoubleClick---------', currIsActive, globalData.activeElement?.id, id)
+				console.log('onDoubleClick---------', currIsActive, activeElemId, id)
 				if (contentEditable !== 'false') return
 				setContentEditable('true')
 				boxRef.current!.style.cursor = 'text'
